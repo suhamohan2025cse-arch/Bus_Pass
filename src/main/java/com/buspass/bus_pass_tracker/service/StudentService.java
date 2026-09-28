@@ -1,13 +1,13 @@
 package com.buspass.bus_pass_tracker.service;
 
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+
 import com.buspass.bus_pass_tracker.entity.Student;
 import com.buspass.bus_pass_tracker.exception.BusinessRuleException;
 import com.buspass.bus_pass_tracker.exception.ResourceNotFoundException;
 import com.buspass.bus_pass_tracker.repository.StudentRepository;
-
-import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 public class StudentService {
@@ -18,8 +18,26 @@ public class StudentService {
         this.repository = repository;
     }
 
+    // Create Student
     public Student create(Student student) {
 
+        // Validate student name
+        if (student.getName() == null || student.getName().isBlank()) {
+            throw new BusinessRuleException(
+                    "Student name is required"
+            );
+        }
+
+        // Validate register number
+        if (student.getRegisterNumber() == null
+                || student.getRegisterNumber().isBlank()) {
+
+            throw new BusinessRuleException(
+                    "Register number is required"
+            );
+        }
+
+        // Check duplicate register number
         if (repository.existsByRegisterNumber(
                 student.getRegisterNumber())) {
 
@@ -31,10 +49,12 @@ public class StudentService {
         return repository.save(student);
     }
 
+    // Get all students
     public List<Student> getAll() {
         return repository.findAll();
     }
 
+    // Get student by ID
     public Student getById(Long id) {
 
         return repository.findById(id)
@@ -45,10 +65,28 @@ public class StudentService {
                 );
     }
 
+    // Update student
     public Student update(Long id, Student input) {
 
         Student existing = getById(id);
 
+        // Validate student name
+        if (input.getName() == null || input.getName().isBlank()) {
+            throw new BusinessRuleException(
+                    "Student name is required"
+            );
+        }
+
+        // Validate register number
+        if (input.getRegisterNumber() == null
+                || input.getRegisterNumber().isBlank()) {
+
+            throw new BusinessRuleException(
+                    "Register number is required"
+            );
+        }
+
+        // Check duplicate register number
         if (!existing.getRegisterNumber()
                 .equals(input.getRegisterNumber())
                 && repository.existsByRegisterNumber(
@@ -69,6 +107,7 @@ public class StudentService {
         return repository.save(existing);
     }
 
+    // Delete student
     public void delete(Long id) {
 
         Student student = getById(id);
