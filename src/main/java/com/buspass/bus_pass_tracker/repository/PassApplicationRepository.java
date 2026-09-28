@@ -1,20 +1,22 @@
 package com.buspass.bus_pass_tracker.repository;
 
-import com.buspass.bus_pass_tracker.entity.ApplicationStatus;
-import com.buspass.bus_pass_tracker.entity.PassApplication;
+import java.time.LocalDate;
+import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.time.LocalDate;
-import java.util.List;
+import com.buspass.bus_pass_tracker.entity.ApplicationStatus;
+import com.buspass.bus_pass_tracker.entity.PassApplication;
 
 public interface PassApplicationRepository
         extends JpaRepository<PassApplication, Long> {
 
     List<PassApplication>
     findByStudentIdOrderByAppliedAtDesc(Long studentId);
+
+    boolean existsByStudent_IdAndStatus(Long studentId, ApplicationStatus status);
 
     List<PassApplication>
     findByStatusOrderByAppliedAtDesc(ApplicationStatus status);

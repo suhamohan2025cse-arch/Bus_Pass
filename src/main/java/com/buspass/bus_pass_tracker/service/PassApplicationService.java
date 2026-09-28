@@ -40,6 +40,9 @@ public class PassApplicationService {
         if (applicationRepository.existsActivePass(student.getId(), ApplicationStatus.APPROVED, LocalDate.now())) {
             throw new BusinessRuleException("Student already has an active bus pass");
         }
+        if (applicationRepository.existsByStudent_IdAndStatus(student.getId(), ApplicationStatus.PENDING)) {
+            throw new BusinessRuleException("Student already has a pending bus pass application");
+        }
 
         PassApplication application = new PassApplication();
         application.setStudent(student);
