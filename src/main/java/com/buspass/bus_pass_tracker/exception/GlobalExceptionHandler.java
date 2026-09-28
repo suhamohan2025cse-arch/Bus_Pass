@@ -1,15 +1,17 @@
 package com.buspass.bus_pass_tracker.exception;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-
-import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -50,17 +52,41 @@ public class GlobalExceptionHandler {
                         )
                 );
 
-        Map<String, Object> body =
-                new LinkedHashMap<>();
+        return build(
+                HttpStatus.BAD_REQUEST,
+                "Request validation failed",
+                errors
+        );
+    }
 
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", 400);
-        body.put("error", "Validation failed");
-        body.put("messages", errors);
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleUnreadableRequest(HttpMessageNotReadableException ex) {
 
-        return ResponseEntity
-                .badRequest()
-                .body(body);
+        return build(
+                HttpStatus.BAD_REQUEST,
+                "Malformed or unreadable request body"
+        );
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+
+        return build(
+                HttpStatus.BAD_REQUEST,
+                "Invalid value for parameter '" + ex.getName() + "'"
+        );
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<Map<String, Object>>
+    handleMissingParameter(MissingServletRequestParameterException ex) {
+
+        return build(
+                HttpStatus.BAD_REQUEST,
+                "Required parameter '" + ex.getParameterName() + "' is missing"
+        );
     }
 
     @ExceptionHandler(Exception.class)
@@ -69,12 +95,18 @@ public class GlobalExceptionHandler {
 
         return build(
                 HttpStatus.INTERNAL_SERVER_ERROR,
-                ex.getMessage()
+                "An unexpected error occurred"
         );
     }
 
     private ResponseEntity<Map<String, Object>>
     build(HttpStatus status, String message) {
+
+        return build(status, message, Map.of());
+    }
+
+    private ResponseEntity<Map<String, Object>>
+    build(HttpStatus status, String message, Map<String, String> messages) {
 
         Map<String, Object> body =
                 new LinkedHashMap<>();
@@ -83,6 +115,9 @@ public class GlobalExceptionHandler {
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+        if (!messages.isEmpty()) {
+            body.put("messages", messages);
+        }
 
         return ResponseEntity
                 .status(status)
