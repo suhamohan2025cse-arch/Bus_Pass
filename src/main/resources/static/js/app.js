@@ -1027,6 +1027,10 @@ async function loadExpiringApplications() {
                 "/applications/expiring?days=30"
             );
 
+        document.getElementById(
+            "expiringCount"
+        ).textContent =
+            applications.length;
 
         renderExpiringApplications(
             applications
@@ -1184,6 +1188,28 @@ function updateApplicationCount(
                 app.status === "APPROVED"
         ).length;
 
+    const rejected =
+        applications.filter(
+            app =>
+                app.status === "REJECTED"
+        ).length;
+
+    const currentDate = new Date();
+    const today = [
+        currentDate.getFullYear(),
+        String(currentDate.getMonth() + 1).padStart(2, "0"),
+        String(currentDate.getDate()).padStart(2, "0")
+    ].join("-");
+    const activePasses =
+        applications.filter(
+            app =>
+                app.status === "APPROVED" &&
+                app.validityStart &&
+                app.validityEnd &&
+                app.validityStart <= today &&
+                app.validityEnd >= today
+        ).length;
+
 
     document.getElementById(
         "pendingCount"
@@ -1195,6 +1221,16 @@ function updateApplicationCount(
         "approvedCount"
     ).textContent =
         approved;
+
+    document.getElementById(
+        "rejectedCount"
+    ).textContent =
+        rejected;
+
+    document.getElementById(
+        "activePassCount"
+    ).textContent =
+        activePasses;
 
 }
 
